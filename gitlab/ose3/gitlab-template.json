@@ -45,7 +45,7 @@
                   "uri": "https://github.com/jcordes73/openshift-gitlab",
                   "ref": "master"
                },
-               "contextDir": "/"
+               "contextDir": "gitlab/gitlab-container"
             },
             "strategy": {
                "type": "Docker",
