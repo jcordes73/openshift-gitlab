@@ -10,7 +10,8 @@ ENV GITLAB_INSTALL_DIR="${GITLAB_HOME}/gitlab" \
     GITLAB_DATA_DIR="${GITLAB_HOME}/data" \
     GITLAB_RUNTIME_DIR="${GITLAB_CACHE_DIR}/runtime"
 
-RUN yum -y install https://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-6.noarch.rpm && \
+RUN yum -y install openssh-server && \
+yum -y install https://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-6.noarch.rpm && \
 curl -LJO https://packages.gitlab.com/gitlab/gitlab-ce/packages/el/7/gitlab-ce-${GITLAB_VERSION}-ce.0.el7.x86_64.rpm/download && \
 rpm -i gitlab-ce-${GITLAB_VERSION}-ce.0.el7.x86_64.rpm && \
 yum install -y gitlab-ce
