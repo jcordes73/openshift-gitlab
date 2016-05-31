@@ -110,7 +110,7 @@
          "parameters": [
             {
                "description": "The GitLab admin login-name.",
-               "displayName": "Nexus Admin login.",
+               "displayName": "GitLab Admin login.",
                "name": "GITLAB_ADMIN_LOGIN_NAME",
                "value": "admin"
             },
@@ -121,16 +121,28 @@
                "value": "admin123"
             },
             {
+               "description": "The database service-name.",
+               "displayName": "Database service-name.",
+               "name": "DATABASE_SERVICE_NAME",
+               "required": true
+            },
+            {
                "description": "The PostgreSQL GitLab login-name.",
                "displayName": "PostgreSQL GitLab login-name.",
                "name": "POSTGRESQL_USER",
-               "value": "admin123"
+               "required": true
             },
             {
                "description": "The PostgreSQL GitLab password.",
                "displayName": "PostgreSQL GitLab password.",
                "name": "POSTGRESQL_PASSWORD",
-               "value": "admin123"
+               "required": true
+            },
+            {
+               "description": "The PostgreSQL GitLab database.",
+               "displayName": "PostgreSQL GitLab database.",
+               "name": "POSTGRESQL_DATABASE",
+               "required": true
             },
             {
                "description": "The name for the application. The service will be named like the application.",
@@ -175,6 +187,9 @@
                             "failurePolicy": "Ignore",
                             "execNewPod": {
                                "containerName": "gitlab",
+                               "command": [
+                                  "scripts/configure-postgres.sh"
+                               ],
                                "env": [
                                   {
                                      "name": "APPLICATION_HOSTNAME",
@@ -281,6 +296,22 @@
                                  {
                                     "name": "GITLAB_ADMIN_PASSWORD",
                                     "value": "${NEXUS_ADMIN_PASSWORD}"
+                                 },
+                                 {
+                                    "name": "POSTGRESQL_USER",
+                                    "value": "${POSTGRESQL_USER}"
+                                 },
+                                 {
+                                    "name": "POSTGRESQL_PASSWORD",
+                                    "value": "${POSTGRESQL_PASSWORD}"
+                                 },
+                                 {
+                                    "name": "POSTGRESQL_DATABASE",
+                                    "value": "${POSTGRESQL_DATABASE}"
+                                 },
+                                 {
+                                    "name": "DATABASE_SERVICE_NAME",
+                                    "value": "${DATABASE_SERVICE_NAME}"
                                  }
                               ]
                            }
