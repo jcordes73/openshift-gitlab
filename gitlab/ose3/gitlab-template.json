@@ -1,0 +1,346 @@
+{
+   "kind": "List",
+   "apiVersion": "v1",
+   "metadata": {
+      "name": "gitlab"
+   },
+   "items": [
+      {
+         "kind": "ServiceAccount",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "gitlab",
+            "namespace": "ci"
+         }
+      },
+      {
+         "kind": "BuildConfig",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "gitlab",
+            "namespace": "ci"
+         },
+         "spec": {
+            "triggers": [
+               {
+                  "type": "GitHub",
+                  "github": {
+                     "secret": "secret"
+                  }
+               },
+               {
+                  "type": "Generic",
+                  "generic": {
+                     "secret": "secret"
+                  }
+               },
+               {
+                  "type": "ImageChange",
+                  "imageChange": {}
+               }
+            ],
+            "source": {
+               "type": "Git",
+               "git": {
+                  "uri": "https://github.com/jcordes73/openshift-gitlab",
+                  "ref": "master"
+               },
+               "contextDir": "/"
+            },
+            "strategy": {
+               "type": "Docker",
+               "dockerStrategy": {
+                  "from": {
+                     "kind": "ImageStreamTag",
+                     "name": "rhel:7.2-38"
+                  }
+               }
+            },
+            "output": {
+               "to": {
+                  "kind": "ImageStreamTag",
+                  "name": "gitlab:latest",
+                  "namespace": "ci"
+               }
+            },
+            "resources": {}
+         }
+      },
+      {
+         "kind": "ImageStream",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "rhel"
+         },
+         "spec": {
+            "dockerImageRepository": "registry.access.redhat.com/rhel"
+         }
+      },
+      {
+         "kind": "ImageStream",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "gitlab",
+            "namespace": "ci"
+         },
+         "spec": {
+            "dockerImageRepository": "",
+            "tags": [
+               {
+                  "name": "latest"
+               }
+            ]
+         }
+      },
+      {
+         "kind": "Template",
+         "apiVersion": "v1",
+         "metadata": {
+            "name": "gitlab",
+            "namespace": "ci",
+            "annotations": {
+               "description": "GitLab service",
+               "tags": "git,GitLab"
+            }
+         },
+         "labels": {
+            "application": "gitlab",
+            "createdBy": "gitlab"
+         },
+         "parameters": [
+            {
+               "description": "The GitLab admin login-name.",
+               "displayName": "Nexus Admin login.",
+               "name": "GITLAB_ADMIN_LOGIN_NAME",
+               "value": "admin"
+            },
+            {
+               "description": "The GitLab admin password.",
+               "displayName": "GitLab Admin password.",
+               "name": "GITLAB_ADMIN_PASSWORD",
+               "value": "admin123"
+            },
+            {
+               "description": "The PostgreSQL GitLab login-name.",
+               "displayName": "PostgreSQL GitLab login-name.",
+               "name": "POSTGRESQL_USER",
+               "value": "admin123"
+            },
+            {
+               "description": "The PostgreSQL GitLab password.",
+               "displayName": "PostgreSQL GitLab password.",
+               "name": "POSTGRESQL_PASSWORD",
+               "value": "admin123"
+            },
+            {
+               "description": "The name for the application. The service will be named like the application.",
+               "displayName": "Application name.",
+               "name": "APPLICATION_NAME",
+               "value": "gitlab"
+            },
+            {
+               "description": "Custom hostname for service routes.  Leave blank for default hostname, e.g.: <application-name>.<project>.<default-domain-suffix>",
+               "displayName": "GitLab instance hostname",
+               "name": "APPLICATION_HOSTNAME"
+            },
+            {
+               "description": "GitLab image name",
+               "displayName": "GitLab image name",
+               "name": "IMAGE_NAME",
+               "value": "gitlab"
+            },
+            {
+               "description": "GitLab image tag",
+               "displayName": "GitLab image tag",
+               "name": "IMAGE_TAG",
+               "value": "latest"
+            }
+         ],
+         "objects": [
+            {
+               "kind": "DeploymentConfig",
+               "apiVersion": "v1",
+               "metadata": {
+                  "name": "gitlab",
+                  "namespace": "ci"
+               },
+               "spec": {
+                  "strategy": {
+                     "type": "Rolling",
+                     "rollingParams": {
+                        "updatePeriodSeconds": 1,
+                        "intervalSeconds": 1,
+                        "timeoutSeconds": 600,
+                        "post": {
+                            "failurePolicy": "Ignore",
+                            "execNewPod": {
+                               "containerName": "gitlab",
+                               "env": [
+                                  {
+                                     "name": "APPLICATION_HOSTNAME",
+                                     "value": "${APPLICATION_HOSTNAME}"
+                                  }
+                               ]
+                            }
+                         }
+                     },
+                     "resources": {}
+                  },
+                  "triggers": [
+                     {
+                        "type": "ConfigChange"
+                     },
+                     {
+                        "type": "ImageChange",
+                        "imageChangeParams": {
+                           "automatic": true,
+                           "containerNames": [
+                              "gitlab"
+                           ],
+                           "from": {
+                              "kind": "ImageStreamTag",
+                              "name": "${IMAGE_NAME}:${IMAGE_TAG}",
+                              "namespace": "ci"
+                           }
+                        }
+                     }
+                  ],
+                  "replicas": 1,
+                  "selector": {
+                     "deploymentconfig": "gitlab"
+                  },
+                  "template": {
+                     "metadata": {
+                        "labels": {
+                           "deploymentconfig": "gitlab"
+                        }
+                     },
+                     "spec": {
+                        "volumes": [
+                           {
+                              "name": "pvol",
+                              "emptyDir": {
+                                 "medium": ""
+                              }
+                           }
+                        ],
+                        "containers": [
+                           {
+                              "name": "gitlab",
+                              "image": "gitlab",
+                              "ports": [
+                                 {
+                                    "containerPort": 22,
+                                    "protocol": "TCP"
+                                 },
+                                 {
+                                    "containerPort": 80,
+                                    "protocol": "TCP"
+                                 },
+                                 {
+                                    "containerPort": 443,
+                                    "protocol": "TCP"
+                                 }
+                              ],
+                              "volumeMounts": [
+                                 {
+                                    "name": "pvol",
+                                    "mountPath": "/sonatype-work"
+                                 }
+                              ],
+                              "livenessProbe": {
+                                 "httpGet": {
+                                    "port": 80
+                                 },
+                                 "initialDelaySeconds": 300,
+                                 "timeoutSeconds": 1
+                              },
+                              "readinessProbe": {
+                                 "httpGet": {
+                                    "port": 80
+                                 },
+                                 "initialDelaySeconds": 20,
+                                 "timeoutSeconds": 1
+                              },
+                              "resources": {
+                                 "requests": {
+                                    "memory": "2Gi"
+                                 }
+                              },
+                              "terminationMessagePath": "/dev/termination-log",
+                              "imagePullPolicy": "IfNotPresent",
+                              "securityContext": {
+                                 "capabilities": {},
+                                 "privileged": false
+                              },
+                              "env": [
+                                 {
+                                    "name": "GITLAB_ADMIN_LOGIN_NAME",
+                                    "value": "${NEXUS_ADMIN_LOGIN_NAME}"
+                                 },
+                                 {
+                                    "name": "GITLAB_ADMIN_PASSWORD",
+                                    "value": "${NEXUS_ADMIN_PASSWORD}"
+                                 }
+                              ]
+                           }
+                        ],
+                        "restartPolicy": "Always",
+                        "dnsPolicy": "ClusterFirst",
+                        "serviceAccountName": "gitlab",
+                        "serviceAccount": "gitlab"
+                     }
+                  }
+               }
+            },
+            {
+               "kind": "Route",
+               "apiVersion": "v1",
+               "metadata": {
+                  "name": "gitlab",
+                  "namespace": "ci"
+               },
+               "spec": {
+                  "host": "${APPLICATION_HOSTNAME}",
+                  "to": {
+                     "kind": "Service",
+                     "name": "gitlab"
+                  }
+               }
+            },
+            {
+               "kind": "Service",
+               "apiVersion": "v1",
+               "metadata": {
+                  "name": "gitlab",
+                  "namespace": "ci"
+               },
+               "spec": {
+                  "ports": [
+                     {
+                        "name": "http",
+                        "port": 80,
+                        "targetPort": 80
+                     },
+                     {
+                        "name": "https",
+                        "port": 443,
+                        "targetPort": 443
+                     },
+                     {
+                        "name": "ssh",
+                        "port": 22,
+                        "targetPort": 22
+                     }
+                  ],
+                  "selector": {
+                     "deploymentconfig": "gitlab"
+                  },
+                  "type": "ClusterIP",
+                  "sessionAffinity": "None"
+               }
+            }
+         ]
+      }
+   ]
+}
