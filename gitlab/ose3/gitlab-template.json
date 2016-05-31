@@ -188,7 +188,7 @@
                             "execNewPod": {
                                "containerName": "gitlab",
                                "command": [
-                                  "scripts/configure-postgres.sh"
+                                  "service gitlab-ce restart"
                                ],
                                "env": [
                                   {
