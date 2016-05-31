@@ -1,7 +1,7 @@
 FROM rhel:rhel7
 MAINTAINER jcordes@redhat.com
 
-ENV GITLAB_VERSION=8.8.0 \
+ENV GITLAB_VERSION=8.7.6 \
     GITLAB_HOME="/home/git" \
     GITLAB_LOG_DIR="/var/log/gitlab" \
     RAILS_ENV=production
