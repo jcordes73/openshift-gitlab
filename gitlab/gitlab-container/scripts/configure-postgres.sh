@@ -18,5 +18,3 @@ gitlab_rails['db_sslmode'] = nil
 gitlab_rails['db_sslrootcert'] = nil
 postgresql['enable'] = false
 EOF
-
-gitlab-ctl reconfigure
