@@ -8,5 +8,5 @@ RUN chmod 755 /usr/local/bin/configure-postgres.sh
 
 VOLUME ["/var/opt/gitlab","/var/log/gitlab","/etc/gitlab"]
 
-#CMD ["/usr/local/bin/configure-postgres.sh"]
-CMD ["ls"]
+CMD ["/usr/local/bin/configure-postgres.sh"]
+CMD ["service","gitlab","start"]
